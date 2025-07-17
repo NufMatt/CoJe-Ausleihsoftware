@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+  #signature-pad {
+    width: 400px;
+    height: 200px;
+    touch-action: none; /* Wichtig für Touch-Geräte */
+  }
+</style>
+<div class="mt-4">
+  <h2>Ausleiher bearbeiten</h2>
+  <form method="POST" onsubmit="syncSignature()">
+    <div class="form-row">
+      <div class="form-group col-md-6">
+        <label>Vorname:</label>
+        <input type="text" class="form-control" value="{{ ausleiher.first_name }}" disabled>
+      </div>
+      <div class="form-group col-md-6">
+        <label>Nachname:</label>
+        <input type="text" class="form-control" value="{{ ausleiher.last_name }}" disabled>
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="contact">Kontakt/Adresse:</label>
+      <input type="text" name="contact" id="contact" class="form-control" value="{{ ausleiher.contact }}">
+    </div>
+    <div class="form-group">
+      <label for="date_of_birth">Geburtsdatum:</label>
+      <div class="d-flex align-items-center">
+        <input type="date" name="date_of_birth" id="date_of_birth"
+               class="form-control"
+               value="{{ ausleiher.date_of_birth }}"
+               onchange="updateAge('date_of_birth','age_display')">
+        <span class="ml-3 font-weight-bold" id="age_display">{{ ausleiher.age }} Jahre</span>
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="bemerkung">Bemerkung:</label>
+      <textarea name="bemerkung" id="bemerkung" class="form-control" rows="2">{{ ausleiher.bemerkung }}</textarea>
+    </div>
+      <!-- Checkboxen vorselektieren -->
+      <div class="form-row">
+        <div class="form-group col-md-6">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="agb" id="agb" 
+                  {% if ausleiher.agb_accepted %}checked{% endif %}>
+            <label class="form-check-label" for="agb">AGBs gelesen</label>
+          </div>
+        </div>
+        <div class="form-group col-md-6">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="liability" id="liability" 
+                  {% if ausleiher.liability_accepted %}checked{% endif %}>
+            <label class="form-check-label" for="liability">Haftungsausschluss zugestimmt</label>
+          </div>
+        </div>
+      </div>
+
+    <div class="form-group">
+      <label>Unterschrift:</label>
+      <canvas id="signature-pad" class="border" width="400" height="200"></canvas>
+      <button type="button" class="btn btn-sm btn-secondary mt-2" onclick="clearSignature()">Löschen</button>
+      <input type="hidden" name="signature_data" id="signature_data" value="{{ ausleiher.signature_data }}">
+    </div>
+    <div class="form-group">
+      <button type="submit" class="btn btn-primary">Speichern</button>
+      <a href="{{ url_for('ausleiher_list') }}" class="btn btn-secondary ml-2">Abbrechen</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const canvas = document.getElementById('signature-pad');
+  const ctx = canvas.getContext('2d');
+  
+  // Canvas physische Größe setzen
+  canvas.width = 400;
+  canvas.height = 200;
+  
+  // CSS-Größe setzen
+  canvas.style.width = '400px';
+  canvas.style.height = '200px';
+  
+  const sigPad = new SignaturePad(canvas, {
+    backgroundColor: 'rgb(255, 255, 255)', // Weißer Hintergrund
+    penColor: 'rgb(0, 0, 0)' // Schwarze Tinte
+  });
+
+  // Signatur laden mit Größenanpassung
+  const savedSig = "{{ ausleiher.signature_data }}";
+  if (savedSig && savedSig !== "None") {
+    const img = new Image();
+    img.onload = function() {
+      // Zeichne die Signatur in Originalgröße
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    };
+    img.src = savedSig;
+  }
+
+  window.clearSignature = function() { 
+    sigPad.clear(); 
+  };
+
+  window.syncSignature = function() {
+    if (!sigPad.isEmpty()) {
+      document.getElementById('signature_data').value = sigPad.toDataURL();
+    }
+  };
+});
+</script>
+{% endblock %}

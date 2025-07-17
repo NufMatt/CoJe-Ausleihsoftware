@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mt-4">
+  <h1>Willkommen in der Verleih App</h1>
+  <p>Wählen Sie eine Option:</p>
+  <ul>
+    <li><a href="{{ url_for('registrierung') }}">Ausleiher registrieren</a></li>
+    <li><a href="{{ url_for('ausleiher_list') }}">Ausleiher Liste</a></li>
+    <li><a href="{{ url_for('objekte') }}">Objekte verwalten</a></li>
+    <li><a href="{{ url_for('ausleihen') }}">Gerät ausleihen</a></li>
+    <li><a href="{{ url_for('dashboard') }}">Dashboard anzeigen</a></li>
+    <li><a href="{{ url_for('statistik') }}">Statistiken</a></li>
+  </ul>
+</div>
+{% endblock %}

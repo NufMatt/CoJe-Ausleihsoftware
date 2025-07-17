@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mt-4">
+  <h2>Statistiken</h2>
+  <!-- 1. Granularity-Tabs -->
+  <ul class="nav nav-tabs mb-3">
+    {% for g,label in [('year','Jahr'),('month','Monat'),('week','Woche'),('day','Tag')] %}
+      <li class="nav-item">
+        <a class="nav-link {% if granularity==g %}active{% endif %}"
+           href="{{ url_for('statistik', granularity=g) }}">{{ label }}</a>
+      </li>
+    {% endfor %}
+  </ul>
+  
+  <!-- 2. Zeitraum-Auswahl je Granularität -->
+  <div class="mb-3">
+    {% if granularity=='year' %}
+      <div class="btn-group">
+        {% for y in years %}
+          <a href="{{ url_for('statistik', granularity='year', year=y) }}"
+             class="btn btn-{% if y==year %}primary{% else %}secondary{% endif %}">
+            {{ y }}
+          </a>
+        {% endfor %}
+      </div>
+    {% elif granularity=='month' %}
+      <form class="form-inline">
+        <select name="year" class="form-control mr-2">
+          {% for y in years %}
+            <option value="{{ y }}" {% if y==year %}selected{% endif %}>{{ y }}</option>
+          {% endfor %}
+        </select>
+        <select name="month" class="form-control mr-2">
+          {% for m in range(1,13) %}
+            <option value="{{ m }}" {% if m==month %}selected{% endif %}>{{ m }}</option>
+          {% endfor %}
+        </select>
+        <button class="btn btn-primary">Anzeigen</button>
+      </form>
+    {% elif granularity=='week' %}
+      <form class="form-inline">
+        <select name="year" class="form-control mr-2">
+          {% for y in years %}
+            <option value="{{ y }}" {% if y==year %}selected{% endif %}>{{ y }}</option>
+          {% endfor %}
+        </select>
+        <input type="number" name="week" class="form-control mr-2" min="1" max="53" value="{{ week or 1 }}">
+        <button class="btn btn-primary">Anzeigen</button>
+      </form>
+    {% else %}
+      <form class="form-inline">
+        <input type="date" name="day" class="form-control mr-2" value="{{ day or '' }}">
+        <button class="btn btn-primary">Anzeigen</button>
+      </form>
+    {% endif %}
+  </div>
+
+  <!-- 3. Basis-Statistiken -->
+  <ul class="list-group mb-4">
+    <li class="list-group-item">
+      Verleihungen im Zeitraum:
+      <strong>{{ total_verleihungen }}</strong>
+    </li>
+    <li class="list-group-item">
+      Ausgeliehene Stunden:
+      <strong>{{ total_hours | format_duration }}</strong>
+    </li>
+  </ul>
+
+  <!-- 4. Kategorie-Filter -->
+  <form class="form-inline mb-3">
+    <label class="mr-2">Kategorie:</label>
+    <select name="category" class="form-control mr-2">
+      {% for c in categories %}
+        <option value="{{ c }}" {% if c==selected_cat %}selected{% endif %}>{{ c }}</option>
+      {% endfor %}
+    </select>
+    <input type="hidden" name="granularity" value="{{ granularity }}">
+    <input type="hidden" name="year" value="{{ year }}">
+    {% if month %}<input type="hidden" name="month" value="{{ month }}">{% endif %}
+    {% if week %}<input type="hidden" name="week" value="{{ week }}">{% endif %}
+    {% if day  %}<input type="hidden" name="day"  value="{{ day  }}">{% endif %}
+    <button class="btn btn-primary">Kategorien aktualisieren</button>
+  </form>
+
+  <!-- 5. Pie-Chart für Objekte -->
+  <canvas
+    id="pieChart"
+    data-labels='{{ labels|tojson|safe }}'
+    data-counts='{{ counts|tojson|safe }}'
+    style="max-width:600px;">
+  </canvas>
+
+
+  <!-- 6. Top-Ausleiher-Tabelle -->
+  <h4 class="mt-5">Top Ausleiher</h4>
+  <table class="table table-sm">
+    <thead>
+      <tr><th>#</th><th>Name</th><th>Anzahl</th></tr>
+    </thead>
+    <tbody>
+      {% for u in top_users %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ u.first_name }} {{ u.last_name }}</td>
+        <td>{{ u.loan_count }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const canvas = document.getElementById('pieChart');
+      // hier KEINE Jinja-Klammern mehr:
+      const labels = JSON.parse(canvas.dataset.labels);
+      const data   = JSON.parse(canvas.dataset.counts);
+
+      const ctx = canvas.getContext('2d');
+      new Chart(ctx, {
+        type: 'pie',
+        data: { labels, datasets: [{ data }] },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: 'bottom' } }
+        }
+      });
+    });
+  </script>
+{% endblock %}
+
+

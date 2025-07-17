@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mt-4">
+  <h2>Liste der Ausleiher</h2>
+  <form method="GET" class="form-inline mb-3">
+    <input type="text" name="search" class="form-control mr-2" placeholder="Suche..." value="{{ search_query }}">
+    <button type="submit" class="btn btn-primary">Suchen</button>
+  </form>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Alter</th>
+        <th>Kontakt</th>
+        <th>AGBs</th>
+        <th>Haftung</th>
+        <th>Unterschrift</th>
+        <th>Vertragsdatum</th>
+        <th>Aktion</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for a in ausleiher %}
+      <tr>
+        <td>{{ a.name }}</td>
+        <td>{{ a.age }}</td>
+        <td>{{ a.contact }}</td>
+        <td>{{ '✔' if a.agb_accepted else '✘' }}</td>
+        <td>{{ '✔' if a.liability_accepted else '✘' }}</td>
+        <td>
+          {% if a.signature_data %}
+            <img src="{{ a.signature_data }}" alt="Unterschrift" width="150" />
+          {% else %}-{% endif %}
+        </td>
+        <td>{{ a.vertragsdatum.strftime("%d.%m.%Y %H:%M") }}</td>
+        <td>
+          <a href="{{ url_for('edit_ausleiher', ausleiher_id=a.id) }}" class="btn btn-info btn-sm">Bearbeiten</a>
+          <form action="{{ url_for('delete_ausleiher', ausleiher_id=a.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Ausleiher wirklich löschen?');">
+            <button type="submit" class="btn btn-danger btn-sm">Löschen</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

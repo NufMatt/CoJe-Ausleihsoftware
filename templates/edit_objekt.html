@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mt-4">
+  <h2>Objekt bearbeiten</h2>
+  <form method="POST">
+    <div class="form-group">
+      <label for="name">Name:</label>
+      <input type="text" name="name" id="name" class="form-control" value="{{ objekt.name }}" required>
+    </div>
+    <div class="form-group">
+      <label for="beschreibung">Beschreibung:</label>
+      <input type="text" name="beschreibung" id="beschreibung" class="form-control" value="{{ objekt.beschreibung }}">
+    </div>
+    <button type="submit" class="btn btn-primary">Speichern</button>
+    <a href="{{ url_for('objekte') }}" class="btn btn-secondary">Abbrechen</a>
+  </form>
+</div>
+{% endblock %}

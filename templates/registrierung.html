@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mt-4">
+  <h2>Ausleiher Registrierung</h2>
+  <form method="POST" onsubmit="syncSignature()">
+    <div class="form-row">
+      <div class="form-group col-md-6">
+        <label for="first_name">Vorname:</label>
+        <input type="text" name="first_name" id="first_name" class="form-control" required>
+      </div>
+      <div class="form-group col-md-6">
+        <label for="last_name">Nachname:</label>
+        <input type="text" name="last_name" id="last_name" class="form-control" required>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="contact">Kontakt/Adresse:</label>
+      <input type="text" name="contact" id="contact" class="form-control" required>
+    </div>
+    <div class="form-group">
+      <label for="bemerkung">Bemerkung:</label>
+      <textarea name="bemerkung" id="bemerkung" class="form-control" rows="2"></textarea>
+    </div>
+    <div class="form-group">
+      <label for="date_of_birth">Geburtsdatum:</label>
+      <div class="d-flex align-items-center">
+        <input type="date" name="date_of_birth" id="date_of_birth" class="form-control" required onchange="updateAge()">
+        <span class="ml-3 font-weight-bold" id="age_display"></span>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group col-md-6">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" name="agb" id="agb" required>
+          <label class="form-check-label" for="agb">AGBs gelesen</label>
+        </div>
+      </div>
+      <div class="form-group col-md-6">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" name="liability" id="liability" required>
+          <label class="form-check-label" for="liability">Haftungsausschluss zugestimmt</label>
+        </div>
+      </div>
+    </div>
+    
+    <div class="form-group">
+      <label>Unterschrift:</label>
+      <canvas id="signature-pad" class="border" width="400" height="200"></canvas>
+      <button type="button" class="btn btn-sm btn-secondary mt-2" onclick="clearSignature()">Löschen</button>
+      <input type="hidden" name="signature_data" id="signature_data">
+    </div>
+
+    <button type="submit" class="btn btn-primary">Registrieren</button>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+<script>
+  // Signature Pad initialisieren
+  const canvas = document.getElementById('signature-pad');
+  const sigPad = new SignaturePad(canvas);
+  function clearSignature() { sigPad.clear(); }
+  function syncSignature() {
+    if (!sigPad.isEmpty()) {
+      document.getElementById('signature_data').value = sigPad.toDataURL();
+    }
+  }
+
+  // Alter berechnen und anzeigen
+  function updateAge() {
+    const dob = new Date(document.getElementById('date_of_birth').value);
+    if (isNaN(dob)) return;
+    const diff = Date.now() - dob.getTime();
+    const age = new Date(diff).getUTCFullYear() - 1970;
+    document.getElementById('age_display').textContent = age + ' Jahre';
+  }
+</script>
+{% endblock %}

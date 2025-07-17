@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <div class="mt-4">
+    <h2>Dashboard – Übersicht der Verleihungen</h2>
+
+    <!-- Aktive Ausleihen -->
+     <div class="table-responsive">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th style="font-size:1.5rem;">Countdown</th>
+            <th>Name / Zeit / Gegenstand</th>
+            <th>Helm</th>
+            <th>Pfand</th>
+            <th>Dauer</th>
+            <th>Status</th>
+            <th>Aktion</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if active %}
+            {% for r in active %}
+            <tr id="row-{{ r.id }}">
+              <td style="font-size:1.5rem;">
+                <span class="countdown"
+                      data-row-id="{{ r.id }}"
+                      data-endtime="{{ r.end_time.isoformat() }}"
+                      id="timer-{{ r.id }}"></span>
+              </td>
+              <td>
+                <span class="time-display">{{ r.start_time.strftime("%H:%M") }}</span>
+                <div class="date-display">{{ r.start_time.strftime("%d.%m.%Y") }}</div>
+                {{ r.ausleiher.name }} – {{ r.objekt.name }}
+              </td>
+              <td>
+                {% if r.helm_status %}
+                  {{ r.helm_status }}{% if r.helm_status == "Andere" and r.helm_other %} ({{ r.helm_other }}){% endif %}
+                {% else %}-{% endif %}
+              </td>
+              <td>
+                {% if r.pfand_euro %}
+                  {{ r.pfand_euro }}{% if r.pfand_text %} ({{ r.pfand_text }}){% endif %} €
+                {% else %}-{% endif %}
+              </td>
+              <td>
+                {% if r.actual_duration is not none %}
+                  {{ r.actual_duration | format_duration }}
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+              <td>{{ r.status }}</td>
+              <td>
+                <form action="{{ url_for('zurueckgeben_prompt', verleih_id=r.id) }}" method="POST" class="d-inline">
+                  <button type="submit" class="btn btn-sm btn-success">Zurückgeben</button>
+                </form>
+                <a href="{{ url_for('zurueckgeben_form', verleih_id=r.id) }}" 
+                  class="btn btn-sm btn-info mt-1">Zurückgeben mit Notiz</a>
+              </td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="7" class="text-center">Keine aktiven Ausleihen im Moment.</td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Abgegebene Ausleihen -->
+    <h3 class="mt-5">Abgegeben</h3>
+    <div class="table-responsive">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Name / Ausleihzeit</th>
+            <th>Gegenstand</th>
+            <th>Rückgabezeit</th>
+            <th>Dauer</th>
+            <th>Helm</th>
+            <th>Pfand</th>
+            <th>Bemerkung</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in returned %}
+          <tr class="table-secondary">
+            <td>
+              {{ r.ausleiher.name }}<br>
+              <span class="time-display">{{ r.start_time.strftime("%H:%M") }}</span>
+              <div class="date-display">{{ r.start_time.strftime("%d.%m.%Y") }}</div>
+            </td>
+            <td>{{ r.objekt.name }}</td>
+            <td>
+              <span class="time-display">{{ r.return_time.strftime("%H:%M") }}</span>
+              <div class="date-display">{{ r.return_time.strftime("%d.%m.%Y") }}</div>
+            </td>
+            <td>
+              {% set dur = r.actual_duration %}
+              {% if dur >= 1 %}
+                {{ "{:.2f}".format(dur).replace('.', ',') }} Std.
+              {% else %}
+                {{ "{:.0f}".format(dur * 60) }} Min.
+              {% endif %}
+            </td>
+            <td>
+              {% if r.helm_status %}
+                {{ r.helm_status }}{% if r.helm_status == "Andere" and r.helm_other %} ({{ r.helm_other }}){% endif %}
+              {% else %}-{% endif %}
+            </td>
+            <td>
+              {% if r.pfand_euro %}
+                €{{ r.pfand_euro }}{% if r.pfand_text %} ({{ r.pfand_text }}){% endif %}
+              {% else %}-{% endif %}
+            </td>
+            <td>{{ r.return_note or '-' }}</td>
+                    <td>
+                {% if r.status == 'Zurückgegeben' %}
+                <form action="{{ url_for('undo_rueckgabe', verleih_id=r.id) }}" method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-warning btn-sm">Rückgängig</button>
+                </form>
+                {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function formatCountdown(seconds) {
+    const absSec = Math.abs(Math.floor(seconds));
+    const h = Math.floor(absSec / 3600);
+    const m = Math.floor((absSec % 3600) / 60);
+    const s = absSec % 60;
+    const txt = (h > 0 ? h + ':' : '0:') +
+                String(m).padStart(2,'0') + ':' +
+                String(s).padStart(2,'0');
+    return seconds < 0 ? '+' + txt : txt;
+  }
+
+  function updateCountdowns() {
+    document.querySelectorAll('.countdown').forEach(elem => {
+      const rowId = elem.dataset.rowId;
+      const row = document.getElementById('row-' + rowId);
+      const end = new Date(elem.dataset.endtime);
+      const diff = (end - new Date()) / 1000;
+      elem.textContent = formatCountdown(diff);
+      if (diff < 0) {
+        row.style.backgroundColor = '#f8d7da';
+      }
+    });
+  }
+
+  setInterval(updateCountdowns, 1000);
+  updateCountdowns();
+</script>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mt-4">
+    <h2>Objektstatus</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Objekt</th>
+                <th>Status</th>
+                <th>Ausgeliehen von</th>
+                <th>Rückgabe bis</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for obj in objekte %}
+            <tr>
+                <td>{{ obj.name }}</td>
+                <td>
+                    {% if obj.status == 'Verfügbar' %}
+                        <span class="badge badge-success">Verfügbar</span>
+                    {% else %}
+                        <span class="badge badge-danger">Ausgeliehen</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if obj.current_loan %}
+                        {{ obj.current_loan.ausleiher.name }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>
+                    {% if obj.current_loan %}
+                        <span class="time-display">{{ obj.current_loan.end_time.strftime("%H:%M") }}</span>
+                        <div class="date-display">{{ obj.current_loan.end_time.strftime("%d.%m.%Y") }}</div>
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

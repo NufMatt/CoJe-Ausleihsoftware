@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mt-4">
+  <h2>Gerät ausleihen</h2>
+  <form method="POST">
+    <!-- Ausleiher-Auswahl -->
+    <div class="form-group">
+      <label for="ausleiher_select">Ausleiher:</label>
+      <select id="ausleiher_select" name="ausleiher"
+              class="form-control form-control-lg rounded-pill border-primary"
+              required>
+        <option value="">-- Bitte wählen --</option>
+        {% for a in ausleiher_list %}
+          <option value="{{ a.id }}"
+                  data-bemerkung="{{ a.bemerkung|default('') }}"
+                  {% if not a.verfuegbar %}disabled style="color:#ccc;"{% endif %}>
+            {{ a.name }}{% if not a.verfuegbar %} (akt. ausgeliehen){% endif %}
+          </option>
+        {% endfor %}
+      </select>
+      <small id="ausleiherBemerkung" class="form-text text-muted"></small>
+      <button type="button" id="editAusleiher"
+              class="btn btn-outline-secondary btn-sm mt-1"
+              style="display:none;">
+        Auswahl ändern
+      </button>
+    </div>
+
+    <div class="form-group">
+      <label for="objekt_select">Objekt:</label>
+      <select id="objekt_select" name="objekt" class="form-control form-control-lg rounded-pill border-primary" required>
+        <option value="">-- Bitte wählen --</option>
+        {% for obj in objekte_list %}
+          <option value="{{ obj.name }}" 
+                  data-beschreibung="{{ obj.beschreibung }}"
+                  {% if not obj.verfuegbar %}disabled style="color:#ccc;"{% endif %}>
+            {{ obj.name }}{% if not obj.verfuegbar %} (ausgeliehen){% endif %}
+          </option>
+        {% endfor %}
+      </select>
+      <small id="objektBeschreibung" class="form-text text-muted"></small>
+    </div>
+    
+    <!-- Startzeit automatisch jetzt (Berlin-Zeit) -->
+    <div class="form-group">
+      <label for="start_time">Startzeit:</label>
+      <input type="datetime-local"
+             id="start_time"
+             name="start_time"
+             class="form-control"
+             value="{{ today }}"
+             required>
+    </div>
+
+    <!-- Rückgabezeit-Vorlagen -->
+    <div class="form-group">
+      <label>Rückgabezeit:</label><br>
+      <button type="button" class="btn btn-outline-primary"
+              onclick="setReturn('18:00')">bis 18:00</button>
+      <button type="button" class="btn btn-outline-primary ml-2"
+              onclick="setReturn('19:00')">bis 19:00</button>
+      <button type="button" class="btn btn-outline-primary ml-2"
+              onclick="toggleCustom()">Eigene</button>
+      <button type="button" class="btn btn-outline-primary ml-2"
+              onclick="toggleHours()">Stunden</button>
+    </div>
+
+    <!-- Eigene Rückgabezeit -->
+    <div class="form-group" id="custom-datetime" style="display:none;">
+      <label for="return_time">Eigene Rückgabezeit:</label>
+      <input type="datetime-local"
+             id="return_time"
+             name="return_time"
+             class="form-control"
+             value="{{ today }}">
+    </div>
+
+    <!-- Stunden-Eingabe -->
+    <div class="form-group" id="custom-hours" style="display:none;">
+      <label for="duration_hours">Dauer (Stunden):</label>
+      <input type="number"
+             step="0.1"
+             id="duration_hours"
+             name="duration_hours"
+             class="form-control"
+             placeholder="z.B. 1.5">
+      <small class="form-text text-muted">
+        Gib die gewünschte Dauer ein – das Ende wird auf die exakte Stunde und Minute gesetzt.
+      </small>
+    </div>
+
+    <!-- Pfand nebeneinander -->
+    <div class="form-row">
+<!-- Replace the existing pfand_text input -->
+      <div class="form-group col-md-8">
+          <label for="pfand_text">Pfand (Bemerkung):</label>
+          <select id="pfand_text" name="pfand_text" class="form-control" onchange="checkCustomPfand()">
+              <option value="">Kein Pfand</option>
+              <option value="Geldbeutel">Geldbeutel</option>
+              <option value="Handy">Handy</option>
+              <option value="Schlüssel">Schlüssel</option>
+              <option value="Personalausweis">Personalausweis</option>
+              <option value="Führerschein">Führerschein</option>
+              <option value="Sonstiges">Sonstiges...</option>
+          </select>
+          <input type="text" id="custom_pfand" name="custom_pfand" class="form-control mt-2" 
+                style="display:none;" placeholder="Eigene Pfandbeschreibung">
+      </div>
+      <div class="form-group col-md-4">
+        <label for="pfand_euro">Pfandbetrag (€):</label>
+        <input type="number" id="pfand_euro" name="pfand_euro"
+               class="form-control pfand-betrag"
+               step="0.01">
+      </div>
+    </div>
+
+    <!-- Helm-Auswahl -->
+    <div class="form-group">
+      <label>Helm:</label><br>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio"
+               name="helm_status" id="helm_ja" value="Ja" required>
+        <label class="form-check-label" for="helm_ja">
+          Ja, Helm ausgeliehen
+        </label>
+      </div>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio"
+               name="helm_status" id="helm_nein" value="Nein">
+        <label class="form-check-label" for="helm_nein">
+          Nein, eigener Helm
+        </label>
+      </div>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio"
+               name="helm_status" id="helm_andere" value="Andere">
+        <label class="form-check-label" for="helm_andere">
+          Andere
+        </label>
+      </div>
+      <div id="helm_other_div" class="mt-2" style="display:none;">
+        <input type="text" name="helm_other" id="helm_other"
+               class="form-control" placeholder="Bitte angeben">
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Ausleihen</button>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/3.0.1/luxon.min.js"></script>
+<script>
+  const { DateTime } = luxon;
+
+  // Setzt sowohl Start- als auch Endzeit sofort auf "jetzt" ohne Rundung
+  function setDefaults() {
+    const now = DateTime.now().setZone('Europe/Berlin');
+    const iso = now.toFormat("yyyy-LL-dd'T'HH:mm");
+    document.getElementById('start_time').value  = iso;
+    document.getElementById('return_time').value = iso;
+  }
+
+  // Rückgabezeit-Vorlage für feste Uhrzeiten
+  function setReturn(timeStr) {
+    const now = DateTime.now().setZone('Europe/Berlin');
+    let [h,m] = timeStr.split(':').map(Number);
+    let dt = now.set({ hour: h, minute: m, second: 0, millisecond: 0 });
+    if (dt < now) dt = dt.plus({ days: 1 });
+    document.getElementById('return_time').value = dt.toFormat("yyyy-LL-dd'T'HH:mm");
+    document.getElementById('custom-datetime').style.display = 'block';
+    document.getElementById('custom-hours').style.display   = 'none';
+  }
+
+  // Eigene Felder ein-/ausblenden
+  function toggleCustom() {
+    const dt = document.getElementById('custom-datetime');
+    dt.style.display = dt.style.display==='none'?'block':'none';
+    document.getElementById('custom-hours').style.display = 'none';
+  }
+  function toggleHours() {
+    const hr = document.getElementById('custom-hours');
+    hr.style.display = hr.style.display==='none'?'block':'none';
+    document.getElementById('custom-datetime').style.display = 'none';
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    setDefaults();
+
+    // Stunden-Eingabe: Ende = Start + Stunden, ohne Rundung
+    document.getElementById('duration_hours')
+      .addEventListener('input', function(){
+        const h = parseFloat(this.value);
+        if (isNaN(h) || h <= 0) return;
+        const startISO = document.getElementById('start_time').value;
+        const base = DateTime.fromISO(startISO, { zone: 'Europe/Berlin' });
+        const ret  = base.plus({ hours: h });
+        document.getElementById('return_time').value = ret.toFormat("yyyy-LL-dd'T'HH:mm");
+        document.getElementById('custom-datetime').style.display = 'block';
+      });
+
+    // Select2 initialisieren & stylen
+    $('#ausleiher_select, #objekt_select').select2({
+      placeholder: 'Bitte wählen',
+      allowClear: true,
+      width: '100%'
+    });
+    $('#ausleiher_select').on('select2:select', function(){
+      $('#ausleiherBemerkung')
+        .text('Bemerkung: ' + $(this).find(':selected').data('bemerkung'));
+      $('#editAusleiher').show();
+    });
+    $('#editAusleiher').click(function(){
+      $('#ausleiher_select').val(null).trigger('change');
+      $('#ausleiherBemerkung').text('');
+      $(this).hide();
+    });
+    $('#objekt_select').on('change', function(){
+      $('#objektBeschreibung')
+        .text($(this).find(':selected').data('beschreibung'));
+    });
+    $('input[name="helm_status"]').change(function(){
+      $('#helm_other_div').toggle($(this).val()==='Andere');
+    });
+  });
+  function checkCustomPfand() {
+    const pfandSelect = document.getElementById('pfand_text');
+    const customInput = document.getElementById('custom_pfand');
+    if (pfandSelect.value === 'Sonstiges') {
+        customInput.style.display = 'block';
+        customInput.required = true;
+    } else {
+        customInput.style.display = 'none';
+        customInput.required = false;
+    }
+}
+</script>
+{% endblock %}

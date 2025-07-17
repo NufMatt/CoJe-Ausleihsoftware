@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mt-4">
+  <h2>Rückgabe von {{ rental.objekt.name }}</h2>
+  <p>Ausgeliehen von: {{ rental.ausleiher.name }}</p>
+  <form method="POST">
+    <div class="form-group">
+      <label for="return_note">Notiz zur Rückgabe:</label>
+      <textarea name="return_note" id="return_note" class="form-control" rows="3" placeholder="Optional: Notiz eingeben"></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">Rückgabe abschließen</button>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Abbrechen</a>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mt-4">
+  <h2>Historie</h2>
+
+  {# Wochentagsnamen #}
+  {% set weekday_names = {
+    '0':'Sonntag','1':'Montag','2':'Dienstag','3':'Mittwoch',
+    '4':'Donnerstag','5':'Freitag','6':'Samstag'
+  } %}
+
+  {# Für jeden Tag eine eigene Tabelle #}
+  {% for day, items in grouped_history.items() %}
+    <h3 class="mt-5">
+      {{ day.strftime("%d.%m.%Y") }} – {{ weekday_names[day.strftime('%w')] }}
+    </h3>
+
+    <table class="table table-striped mb-4">
+      <thead>
+        <tr>
+          <th>Uhrzeit</th>
+          <th>Ausleiher</th>
+          <th>Gegenstand</th>
+          <th>Geplante Dauer</th>
+          <th>Tatsächliche Dauer</th>
+          <th>Pfand</th>
+          <th>Helm</th>
+          <th>Notiz</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in items %}
+        <tr>
+          {# Startzeit Zeit & Datum #}
+          <td>
+            <span class="time-display">{{ r.start_time.strftime("%H:%M") }}</span>
+            <div class="date-display">{{ r.start_time.strftime("%d.%m.%Y") }}</div>
+          </td>
+          <td>{{ r.ausleiher.name }}</td>
+          <td>{{ r.objekt.name }}</td>
+
+          {# geplante Dauer #}
+          <td>
+            <td>{{ r.planned_duration | format_duration }}</td>
+          </td>
+
+          {# tatsächliche Dauer (falls vorhanden) #}
+          <td>
+            {% if r.actual_duration is not none %}
+              {{ r.actual_duration | format_duration }}
+            {% else %}
+              -
+            {% endif %}
+          </td>
+
+          {# Pfand #}
+          <td>
+            {% if r.pfand_euro %}
+              €{{ r.pfand_euro }}{% if r.pfand_text %} ({{ r.pfand_text }}){% endif %}
+            {% else %}
+              -
+            {% endif %}
+          </td>
+
+          {# Helm #}
+          <td>
+            {% if r.helm_status %}
+              {{ r.helm_status }}
+              {% if r.helm_status == "Andere" and r.helm_other %}
+                ({{ r.helm_other }})
+              {% endif %}
+            {% else %}
+              -
+            {% endif %}
+          </td>
+
+          {# Notiz #}
+          <td>{{ r.return_note or '-' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endfor %}
+
+</div>
+{% endblock %}
