@@ -1,1 +1,1 @@
-python -m PyInstaller --onefile --noconsole --name Verleihsoftware --icon=icon.ico --add-data "templates;templates" --add-data "static;static" --add-data "icon.ico;." --add-data "favicon.ico;." Verleihsoftware.py
+python -m PyInstaller --onefile --noconsole --name Verleihsoftware --icon=icon.ico --add-data "templates;templates" --add-data "static;static" --add-data "icon.ico;." --add-data "favicon.ico;." app.py
