@@ -91,26 +91,17 @@
 
     <!-- Pfand nebeneinander -->
     <div class="form-row">
-<!-- Replace the existing pfand_text input -->
-      <div class="form-group col-md-8">
-          <label for="pfand_text">Pfand (Bemerkung):</label>
-          <select id="pfand_text" name="pfand_text" class="form-control" onchange="checkCustomPfand()">
-              <option value="">Kein Pfand</option>
-              <option value="Geldbeutel">Geldbeutel</option>
-              <option value="Handy">Handy</option>
-              <option value="Schlüssel">Schlüssel</option>
-              <option value="Personalausweis">Personalausweis</option>
-              <option value="Führerschein">Führerschein</option>
-              <option value="Sonstiges">Sonstiges...</option>
-          </select>
-          <input type="text" id="custom_pfand" name="custom_pfand" class="form-control mt-2" 
-                style="display:none;" placeholder="Eigene Pfandbeschreibung">
+      <div class="form-group col-md-4">
+        <label for="pfand_text">Pfand (Chipnummer):</label>
+        <input type="number" id="pfand_text" name="pfand_text"
+              class="form-control" min="1" step="1"
+              placeholder="z.B. 1, 2, 3 ...">
       </div>
       <div class="form-group col-md-4">
-        <label for="pfand_euro">Pfandbetrag (€):</label>
+        <label for="pfand_euro">Pfandbetrag (€):</label>
         <input type="number" id="pfand_euro" name="pfand_euro"
-               class="form-control pfand-betrag"
-               step="0.01">
+              class="form-control pfand-betrag"
+              step="0.01">
       </div>
     </div>
 
@@ -224,16 +215,5 @@
       $('#helm_other_div').toggle($(this).val()==='Andere');
     });
   });
-  function checkCustomPfand() {
-    const pfandSelect = document.getElementById('pfand_text');
-    const customInput = document.getElementById('custom_pfand');
-    if (pfandSelect.value === 'Sonstiges') {
-        customInput.style.display = 'block';
-        customInput.required = true;
-    } else {
-        customInput.style.display = 'none';
-        customInput.required = false;
-    }
-}
 </script>
 {% endblock %}

@@ -45,8 +45,8 @@
               {% else %}-{% endif %}
             </td>
             <td>
-              {% if r.pfand_euro %}
-                {{ r.pfand_euro }}{% if r.pfand_text %} ({{ r.pfand_text }}){% endif %} €
+              {% if r.pfand_text %}
+                {{ r.pfand_text }}{% if r.pfand_euro %} ({{ r.pfand_euro|int }}€){% endif %}
               {% else %}-{% endif %}
             </td>
             <td>
@@ -115,8 +115,8 @@
             {% else %}-{% endif %}
           </td>
           <td>
-            {% if r.pfand_euro %}
-              €{{ r.pfand_euro }}{% if r.pfand_text %} ({{ r.pfand_text }}){% endif %}
+            {% if r.pfand_text %}
+              {{ r.pfand_text }}{% if r.pfand_euro %} ({{ r.pfand_euro|int }}€){% endif %}
             {% else %}-{% endif %}
           </td>
           <td>{{ r.return_note or '-' }}</td>

@@ -294,9 +294,8 @@ def ausleihen():
             flash('Rückgabezeit muss nach Startzeit liegen!', 'danger')
             return redirect(url_for('ausleihen'))
 
-        pfand_text = request.form.get('pfand_text')
-        if pfand_text == 'Sonstiges':
-            pfand_text = request.form.get('custom_pfand', '')
+        pfand_chip = request.form.get('pfand_text', '').strip()
+        pfand_text = f'Chipnummer {pfand_chip}' if pfand_chip else ''
         pfand_euro = float(request.form.get('pfand_euro') or 0)
         helm_status = request.form.get('helm_status')
         helm_other = request.form.get('helm_other')
