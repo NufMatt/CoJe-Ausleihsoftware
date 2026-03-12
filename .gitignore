@@ -1,0 +1,6 @@
+*.db
+__pycache__
+.bak
+build
+test.txt
+*.bak
