@@ -195,9 +195,11 @@ def ausleiher_list():
 @app.route('/delete_ausleiher/<int:ausleiher_id>', methods=['POST'])
 def delete_ausleiher(ausleiher_id):
     a = Ausleiher.query.get_or_404(ausleiher_id)
+    # Zuerst alle zugehörigen Verleihungen löschen
+    Verleihung.query.filter_by(ausleiher_id=ausleiher_id).delete()
     db.session.delete(a)
     db.session.commit()
-    flash('Ausleiher gelöscht!', 'success')
+    flash('Ausleiher und zugehörige Verleihungen gelöscht!', 'success')
     return redirect(url_for('ausleiher_list'))
 
 @app.route('/edit_ausleiher/<int:ausleiher_id>', methods=['GET', 'POST'])
