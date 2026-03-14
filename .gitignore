@@ -5,3 +5,6 @@ build
 test.txt
 *.bak
 database.db
+__pycache__
+test.txt
+*.spec
