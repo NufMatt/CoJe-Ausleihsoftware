@@ -3,15 +3,9 @@
 <div class="mt-4">
   <h2>Ausleiher Registrierung</h2>
   <form method="POST" onsubmit="syncSignature()">
-    <div class="form-row">
-      <div class="form-group col-md-6">
-        <label for="first_name">Vorname:</label>
-        <input type="text" name="first_name" id="first_name" class="form-control" required>
-      </div>
-      <div class="form-group col-md-6">
-        <label for="last_name">Nachname:</label>
-        <input type="text" name="last_name" id="last_name" class="form-control" required>
-      </div>
+    <div class="form-group">
+      <label for="name">Name:</label>
+      <input type="text" name="name" id="name" class="form-control" required>
     </div>
 
     <div class="form-group">
@@ -22,11 +16,28 @@
       <label for="bemerkung">Bemerkung:</label>
       <textarea name="bemerkung" id="bemerkung" class="form-control" rows="2"></textarea>
     </div>
+
     <div class="form-group">
-      <label for="date_of_birth">Geburtsdatum:</label>
-      <div class="d-flex align-items-center">
-        <input type="date" name="date_of_birth" id="date_of_birth" class="form-control" required onchange="updateAge()">
-        <span class="ml-3 font-weight-bold" id="age_display"></span>
+      <label>Alter:</label>
+      <div class="form-row">
+        <div class="col-md-4">
+          <input type="number" name="age" id="age" class="form-control"
+                 min="1" max="120" placeholder="Alter"
+                 oninput="calcYearFromAge()">
+          <small class="form-text text-muted">Alter eingeben</small>
+        </div>
+        <div class="col-md-1 d-flex align-items-center justify-content-center">
+          <span class="font-weight-bold">oder</span>
+        </div>
+        <div class="col-md-4">
+          <input type="number" name="birth_year" id="birth_year" class="form-control"
+                 min="1900" max="2099" placeholder="Geburtsjahr"
+                 oninput="calcAgeFromYear()">
+          <small class="form-text text-muted">Geburtsjahr eingeben</small>
+        </div>
+        <div class="col-md-3 d-flex align-items-center">
+          <span class="font-weight-bold ml-2" id="age_display"></span>
+        </div>
       </div>
     </div>
 
@@ -44,7 +55,7 @@
         </div>
       </div>
     </div>
-    
+
     <div class="form-group">
       <label>Unterschrift:</label>
       <canvas id="signature-pad" class="border" width="400" height="200"></canvas>
@@ -60,7 +71,6 @@
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
 <script>
-  // Signature Pad initialisieren
   const canvas = document.getElementById('signature-pad');
   const sigPad = new SignaturePad(canvas);
   function clearSignature() { sigPad.clear(); }
@@ -70,13 +80,21 @@
     }
   }
 
-  // Alter berechnen und anzeigen
-  function updateAge() {
-    const dob = new Date(document.getElementById('date_of_birth').value);
-    if (isNaN(dob)) return;
-    const diff = Date.now() - dob.getTime();
-    const age = new Date(diff).getUTCFullYear() - 1970;
-    document.getElementById('age_display').textContent = age + ' Jahre';
+  function calcYearFromAge() {
+    const age = parseInt(document.getElementById('age').value);
+    if (!isNaN(age) && age > 0) {
+      document.getElementById('birth_year').value = new Date().getFullYear() - age;
+      document.getElementById('age_display').textContent = age + ' Jahre';
+    }
+  }
+
+  function calcAgeFromYear() {
+    const year = parseInt(document.getElementById('birth_year').value);
+    if (!isNaN(year) && year > 1900) {
+      const age = new Date().getFullYear() - year;
+      document.getElementById('age').value = age;
+      document.getElementById('age_display').textContent = age + ' Jahre';
+    }
   }
 </script>
 {% endblock %}

@@ -36,8 +36,8 @@ migrate = Migrate(app, db)
 
 class Ausleiher(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    first_name = db.Column(db.String(50), nullable=False)
-    last_name = db.Column(db.String(50), nullable=False)
+    first_name = db.Column(db.String(100), nullable=False)
+    last_name = db.Column(db.String(50), nullable=False, default='')
     contact = db.Column(db.String(200))
     bemerkung = db.Column(db.Text, default='')
     date_of_birth = db.Column(db.Date, nullable=False)
@@ -149,22 +149,34 @@ def index():
 @app.route('/registrierung', methods=['GET', 'POST'])
 def registrierung():
     if request.method == 'POST':
-        first_name = request.form['first_name']
-        last_name  = request.form['last_name']
+        name       = request.form['name']
+        first_name = name  # ganzer Name im first_name-Feld
+        last_name  = ''
         contact    = request.form['contact']
-        dob_str    = request.form['date_of_birth']
         agb        = 'agb' in request.form
         liability  = 'liability' in request.form
         signature  = request.form.get('signature_data')
         bemerkung  = request.form.get('bemerkung', '')
 
+        age_input  = request.form.get('age', '').strip()
+        year_input = request.form.get('birth_year', '').strip()
+
         try:
-            date_of_birth = datetime.strptime(dob_str, "%Y-%m-%d").date()
+            if year_input:
+                birth_year = int(year_input)
+                date_of_birth = date(birth_year, 1, 1)
+            elif age_input:
+                age = int(age_input)
+                today = date.today()
+                date_of_birth = date(today.year - age, today.month, today.day)
+            else:
+                flash('Bitte Alter oder Geburtsjahr angeben!', 'danger')
+                return redirect(url_for('registrierung'))
         except ValueError:
-            flash('Ungültiges Geburtsdatum!', 'danger')
+            flash('Ungültige Alters- oder Jahresangabe!', 'danger')
             return redirect(url_for('registrierung'))
 
-        if Ausleiher.query.filter_by(first_name=first_name, last_name=last_name).first():
+        if Ausleiher.query.filter_by(first_name=name, last_name='').first():
             flash('Dieser Ausleiher ist bereits registriert!', 'warning')
             return redirect(url_for('registrierung'))
 
@@ -207,8 +219,17 @@ def edit_ausleiher(ausleiher_id):
     a = Ausleiher.query.get_or_404(ausleiher_id)
     if request.method == 'POST':
         a.contact = request.form['contact']
-        dob_str = request.form['date_of_birth']
-        a.date_of_birth = datetime.strptime(dob_str, "%Y-%m-%d").date()
+        age_input  = request.form.get('age', '').strip()
+        year_input = request.form.get('birth_year', '').strip()
+        try:
+            if year_input:
+                a.date_of_birth = date(int(year_input), 1, 1)
+            elif age_input:
+                today = date.today()
+                a.date_of_birth = date(today.year - int(age_input), today.month, today.day)
+        except ValueError:
+            flash('Ungültige Alters- oder Jahresangabe!', 'danger')
+            return redirect(url_for('edit_ausleiher', ausleiher_id=ausleiher_id))
         a.agb_accepted = 'agb' in request.form
         a.liability_accepted = 'liability' in request.form
         a.signature_data = request.form.get('signature_data')

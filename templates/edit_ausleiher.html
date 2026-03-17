@@ -10,28 +10,38 @@
 <div class="mt-4">
   <h2>Ausleiher bearbeiten</h2>
   <form method="POST" onsubmit="syncSignature()">
-    <div class="form-row">
-      <div class="form-group col-md-6">
-        <label>Vorname:</label>
-        <input type="text" class="form-control" value="{{ ausleiher.first_name }}" disabled>
-      </div>
-      <div class="form-group col-md-6">
-        <label>Nachname:</label>
-        <input type="text" class="form-control" value="{{ ausleiher.last_name }}" disabled>
-      </div>
+    <div class="form-group">
+      <label>Name:</label>
+      <input type="text" class="form-control" value="{{ ausleiher.first_name }}" disabled>
     </div>
+
     <div class="form-group">
       <label for="contact">Kontakt/Adresse:</label>
       <input type="text" name="contact" id="contact" class="form-control" value="{{ ausleiher.contact }}">
     </div>
     <div class="form-group">
-      <label for="date_of_birth">Geburtsdatum:</label>
-      <div class="d-flex align-items-center">
-        <input type="date" name="date_of_birth" id="date_of_birth"
-               class="form-control"
-               value="{{ ausleiher.date_of_birth }}"
-               onchange="updateAge('date_of_birth','age_display')">
-        <span class="ml-3 font-weight-bold" id="age_display">{{ ausleiher.age }} Jahre</span>
+      <label>Alter:</label>
+      <div class="form-row">
+        <div class="col-md-4">
+          <input type="number" name="age" id="age" class="form-control"
+                min="1" max="120" placeholder="Alter"
+                value="{{ ausleiher.age }}"
+                oninput="calcYearFromAge()">
+          <small class="form-text text-muted">Alter eingeben</small>
+        </div>
+        <div class="col-md-1 d-flex align-items-center justify-content-center">
+          <span class="font-weight-bold">oder</span>
+        </div>
+        <div class="col-md-4">
+          <input type="number" name="birth_year" id="birth_year" class="form-control"
+                min="1900" max="2099" placeholder="Geburtsjahr"
+                value="{{ ausleiher.date_of_birth.year }}"
+                oninput="calcAgeFromYear()">
+          <small class="form-text text-muted">Geburtsjahr eingeben</small>
+        </div>
+        <div class="col-md-3 d-flex align-items-center">
+          <span class="font-weight-bold ml-2" id="age_display">{{ ausleiher.age }} Jahre</span>
+        </div>
       </div>
     </div>
     <div class="form-group">
@@ -110,5 +120,20 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   };
 });
+function calcYearFromAge() {
+  const age = parseInt(document.getElementById('age').value);
+  if (!isNaN(age) && age > 0) {
+    document.getElementById('birth_year').value = new Date().getFullYear() - age;
+    document.getElementById('age_display').textContent = age + ' Jahre';
+  }
+}
+function calcAgeFromYear() {
+  const year = parseInt(document.getElementById('birth_year').value);
+  if (!isNaN(year) && year > 1900) {
+    const age = new Date().getFullYear() - year;
+    document.getElementById('age').value = age;
+    document.getElementById('age_display').textContent = age + ' Jahre';
+  }
+}
 </script>
 {% endblock %}
